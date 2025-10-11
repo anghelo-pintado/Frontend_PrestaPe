@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consultar Préstamos - SisPresta</title>
+    <link rel="stylesheet" href="src/css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">
+        <i class="fa-solid fa-landmark"></i>
+        <h1>SisPresta</h1>
+      </div>
+      <nav class="navbar-nav">
+        <a href="index.html" class="nav-link"
+          ><i class="fa-solid fa-house"></i> Inicio</a
+        >
+        <a href="prestamos.html" class="nav-link active"
+          ><i class="fa-solid fa-table-list"></i> Préstamos</a
+        >
+        <a href="nuevo-prestamo.html" class="nav-link"
+          ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
+        >
+      </nav>
+    </header>
+
+    <main class="container">
+      <div class="main-title">
+        <h2>Préstamos</h2>
+      </div>
+
+      <section class="card filter-card">
+        <form id="filtro-form">
+          <div class="form-group">
+            <label for="filtro-dni">Filtrar por DNI del cliente</label>
+            <input
+              type="text"
+              id="filtro-dni"
+              placeholder="Ingrese DNI"
+              maxlength="8"
+            />
+          </div>
+          <div class="form-group">
+            <label for="filtro-estado">Filtrar por estado</label>
+            <select id="filtro-estado">
+              <option value="todos">Todos</option>
+              <option value="activo">Activo</option>
+              <option value="pagado">Pagado</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Buscar</button>
+        </form>
+      </section>
+
+      <section id="resultado-busqueda" class="hidden">
+        <div id="mensaje-no-encontrado" class="alert alert-danger hidden">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <div>
+            <strong>Préstamo no encontrado.</strong> Verifique el DNI e intente
+            de nuevo.
+          </div>
+        </div>
+
+        <div class="results-grid">
+          <div class="card info-card">
+            <div class="info-item">
+              <span>Cliente:</span> <strong id="res-cliente"></strong>
+            </div>
+            <div class="info-item">
+              <span>DNI:</span> <strong id="res-dni"></strong>
+            </div>
+            <div class="info-item">
+              <span>Monto del Préstamo:</span> <strong id="res-monto"></strong>
+            </div>
+            <div class="info-item">
+              <span>TEA:</span> <strong id="res-tea"></strong>
+            </div>
+            <div class="info-item">
+              <span>Plazo:</span> <strong id="res-plazo"></strong>
+            </div>
+            <div class="info-item">
+              <span>Cuota Fija Mensual:</span> <strong id="res-cuota"></strong>
+            </div>
+          </div>
+
+          <div class="card actions-card-results">
+            <h4>Acciones</h4>
+            <button class="btn btn-secondary btn-full-width">
+              <i class="fa-solid fa-file-pdf"></i> Exportar PDF cronograma
+            </button>
+            <hr />
+            <div class="form-group">
+              <label for="email-input">Enviar cronograma por email</label>
+              <div class="input-group">
+                <input
+                  type="email"
+                  id="email-input"
+                  placeholder="ana.garcia@example.com"
+                />
+                <button class="btn btn-primary">Enviar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card cronograma-card">
+            <h4>Cronograma de Pagos</h4>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>N° Cuota</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Monto Cuota</th>
+                  </tr>
+                </thead>
+                <tbody id="res-cronograma-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="src/js/prestamos-logic.js"></script>
+  </body>
+</html>

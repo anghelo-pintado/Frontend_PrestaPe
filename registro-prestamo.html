@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro de Préstamo - SisPresta</title>
+    <link rel="stylesheet" href="src/css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">
+        <i class="fa-solid fa-landmark"></i>
+        <h1>SisPresta</h1>
+      </div>
+      <nav class="navbar-nav">
+        <a href="index.html" class="nav-link"
+          ><i class="fa-solid fa-house"></i> Inicio</a
+        >
+        <a href="#" class="nav-link"
+          ><i class="fa-solid fa-table-list"></i> Préstamos</a
+        >
+        <a href="nuevo-prestamo.html" class="nav-link active"
+          ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
+        >
+      </nav>
+    </header>
+
+    <main class="container">
+      <section id="registro-prestamo-container">
+        <div class="main-title">
+          <h2>Registro de Nuevo Préstamo</h2>
+          <p id="cliente-info-header"></p>
+        </div>
+        <div class="layout-container">
+          <div class="layout-column">
+            <div class="card">
+              <form id="prestamo-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="fecha-inicio">Fecha de Inicio</label
+                    ><input type="date" id="fecha-inicio" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="monto">Monto Principal (S/)</label
+                    ><input
+                      type="number"
+                      id="monto"
+                      placeholder="5000"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="tea">TEA Anual (%)</label
+                    ><input type="number" id="tea" placeholder="15" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="plazo">Plazo (meses)</label
+                    ><input
+                      type="number"
+                      id="plazo"
+                      placeholder="24"
+                      required
+                    />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full-width">
+                  <i class="fa-solid fa-calculator"></i> Generar Cronograma
+                  (Previsualización)
+                </button>
+              </form>
+            </div>
+            <div class="card hidden" id="dj-card">
+              <button
+                id="btn-generar-dj"
+                class="btn btn-secondary btn-full-width"
+              >
+                <i class="fa-solid fa-file-download"></i> Generar DJ (UIT/PEP)
+              </button>
+            </div>
+          </div>
+          <div class="layout-column">
+            <div class="card">
+              <h3>Cronograma de Pagos (Previsualización)</h3>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>N° Cuota</th>
+                      <th>Fecha Venc.</th>
+                      <th>Cuota (S/)</th>
+                      <th>Interés (S/)</th>
+                      <th>Amortiz. (S/)</th>
+                      <th>Saldo (S/)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cronograma-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div id="alerta-uit" class="alert alert-warning hidden">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <div>
+                <strong>¡Atención!</strong>
+                <p>
+                  El monto del préstamo supera las 1 UIT. Se requiere presentar
+                  una Declaración Jurada de Ingresos.
+                </p>
+              </div>
+            </div>
+            <div id="alerta-pep" class="alert alert-danger hidden">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <div>
+                <strong>¡Alerta de Riesgo!</strong>
+                <p>
+                  El cliente ha sido identificado como Persona Expuesta
+                  Políticamente (PEP). Se requiere una debida diligencia
+                  ampliada.
+                </p>
+              </div>
+            </div>
+            <button
+              id="btn-confirmar"
+              class="btn btn-confirm btn-full-width"
+              disabled
+            >
+              Confirmar y Guardar
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="src/js/registro.js"></script>
+  </body>
+</html>

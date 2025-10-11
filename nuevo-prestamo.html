@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuevo Préstamo - SisPresta</title>
+    <link rel="stylesheet" href="src/css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">
+        <i class="fa-solid fa-landmark"></i>
+        <h1>SisPresta</h1>
+      </div>
+      <nav class="navbar-nav">
+        <a href="index.html" class="nav-link"
+          ><i class="fa-solid fa-house"></i> Inicio</a
+        >
+        <a href="prestamos.html" class="nav-link"
+          ><i class="fa-solid fa-table-list"></i> Préstamos</a
+        >
+        <a href="nuevo-prestamo.html" class="nav-link active"
+          ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
+        >
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="form-container">
+        <h2>Verificación de Cliente para Nuevo Préstamo</h2>
+        <p>Ingrese el número de DNI del solicitante para iniciar.</p>
+
+        <form id="verificacion-form" class="verification-form">
+          <div class="form-group-inline">
+            <div class="form-group">
+              <label for="dni">DNI</label>
+              <input
+                type="text"
+                id="dni"
+                name="dni"
+                placeholder="Ingrese los 8 dígitos"
+                maxlength="8"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary btn-fixed-width">
+              Verificar
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="nombre-completo">Nombre Completo</label>
+            <input
+              type="text"
+              id="nombre-completo"
+              name="nombre-completo"
+              readonly
+            />
+          </div>
+
+          <div class="form-group-checkbox">
+            <input type="checkbox" id="pep" name="pep" />
+            <label for="pep"
+              >¿Es una Persona Políticamente Expuesta (PEP)?</label
+            >
+          </div>
+        </form>
+
+        <div id="alerta-prestamo-activo" class="alert alert-warning hidden">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>
+            <strong>Cliente con Préstamo Activo</strong>
+            <p>
+              Este cliente ya tiene un préstamo en estado ACTIVO. Verifique en
+              el módulo de clientes antes de proceder.
+            </p>
+          </div>
+        </div>
+        <div id="alerta-dni-no-encontrado" class="alert alert-danger hidden">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <div>
+            <strong>DNI no encontrado</strong>
+            <p>DNI no encontrado. Por favor, verifique el número.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="src/js/prestamo.js"></script>
+  </body>
+</html>
