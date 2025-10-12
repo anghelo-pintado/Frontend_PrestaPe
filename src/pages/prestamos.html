@@ -17,15 +17,15 @@
         <h1>SisPresta</h1>
       </div>
       <nav class="navbar-nav">
-        <a href="../index.html" class="nav-link"
-          ><i class="fa-solid fa-house"></i> Inicio</a
-        >
-        <a href="prestamos.html" class="nav-link active"
-          ><i class="fa-solid fa-table-list"></i> Préstamos</a
-        >
-        <a href="nuevo-prestamo.html" class="nav-link"
-          ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
-        >
+        <a href="../index.html" class="nav-link">
+          <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        <a href="prestamos.html" class="nav-link active">
+          <i class="fa-solid fa-table-list"></i> Préstamos
+        </a>
+        <a href="nuevo-prestamo.html" class="nav-link">
+          <i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo
+        </a>
       </nav>
     </header>
 
@@ -36,24 +36,19 @@
 
       <section class="card filter-card">
         <form id="filtro-form">
-          <div class="form-group">
-            <label for="filtro-dni">Filtrar por DNI del cliente</label>
+          <div class="form-group-inline">
+            <label for="filtro-dni">Buscar por DNI del cliente:</label>
             <input
               type="text"
               id="filtro-dni"
               placeholder="Ingrese DNI"
               maxlength="8"
+              required
             />
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
           </div>
-          <div class="form-group">
-            <label for="filtro-estado">Filtrar por estado</label>
-            <select id="filtro-estado">
-              <option value="todos">Todos</option>
-              <option value="activo">Activo</option>
-              <option value="pagado">Pagado</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary">Buscar</button>
         </form>
       </section>
 
@@ -90,7 +85,10 @@
 
           <div class="card actions-card-results">
             <h4>Acciones</h4>
-            <button class="btn btn-secondary btn-full-width">
+            <button
+              id="btn-exportar-pdf"
+              class="btn btn-secondary btn-full-width"
+            >
               <i class="fa-solid fa-file-pdf"></i> Exportar PDF cronograma
             </button>
             <hr />
@@ -102,7 +100,9 @@
                   id="email-input"
                   placeholder="ana.garcia@example.com"
                 />
-                <button class="btn btn-primary">Enviar</button>
+                <button id="btn-enviar-email" class="btn btn-primary">
+                  Enviar
+                </button>
               </div>
             </div>
           </div>
@@ -126,6 +126,8 @@
       </section>
     </main>
 
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
     <script src="../js/prestamos-logic.js"></script>
   </body>
 </html>

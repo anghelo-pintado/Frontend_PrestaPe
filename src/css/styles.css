@@ -8,6 +8,7 @@
   --border-color: #ecf0f1;
 }
 
+/* --- Reset general --- */
 * {
   margin: 0;
   padding: 0;
@@ -20,6 +21,7 @@ body {
   color: var(--text-color);
 }
 
+/* --- Navbar --- */
 .navbar {
   background-color: var(--card-bg);
   padding: 1rem 2rem;
@@ -65,12 +67,14 @@ body {
   margin-right: 0.3rem;
 }
 
+/* --- Contenedor general --- */
 .container {
   max-width: 900px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
 
+/* --- Sección principal (index) --- */
 .hero-section {
   margin-bottom: 2rem;
 }
@@ -107,6 +111,7 @@ body {
   gap: 1rem;
 }
 
+/* --- Botones --- */
 .btn {
   padding: 0.8rem 1.5rem;
   border: none;
@@ -144,6 +149,7 @@ body {
   border-color: #e0e0e0;
 }
 
+/* --- Formularios generales --- */
 .form-container {
   background-color: var(--card-bg);
   padding: 2rem;
@@ -174,11 +180,25 @@ body {
   font-size: 0.9rem;
 }
 
-.form-group input[type="text"] {
-  padding: 0.8rem;
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+#filtro-form input[type="text"] {
+  width: 100%;
+  padding: 0.8rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 1rem;
+  background-color: white;
+  color: var(--text-color);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input[type="text"]:focus,
+#filtro-form input[type="text"]:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2);
+  outline: none;
 }
 
 .form-group input[readonly] {
@@ -187,6 +207,7 @@ body {
   color: var(--text-light);
 }
 
+/* --- Otros grupos de formulario --- */
 .form-group-inline {
   display: flex;
   align-items: flex-end;
@@ -206,6 +227,7 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* --- Alertas --- */
 .alert {
   display: flex;
   align-items: flex-start;
@@ -242,7 +264,7 @@ body {
   border-color: #fecaca;
 }
 
-/* --- Estilos para la Sección de Registro de Préstamo --- */
+/* --- Registro de préstamo --- */
 .main-title {
   margin-bottom: 2rem;
   text-align: center;
@@ -273,18 +295,10 @@ body {
   border: 1px solid var(--border-color);
 }
 
+/* --- Filas y celdas --- */
 .form-row {
   display: flex;
   gap: 1rem;
-}
-
-.form-group input[type="date"],
-.form-group input[type="number"] {
-  width: 100%;
-  padding: 0.8rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 1rem;
 }
 
 .btn-full-width {
@@ -306,7 +320,7 @@ body {
   transform: none;
 }
 
-/* --- Estilos de la Tabla del Cronograma --- */
+/* --- Tabla del cronograma --- */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -340,32 +354,51 @@ tbody tr:hover {
   background-color: #f9f9f9;
 }
 
-/* --- Estilos para la Página de Préstamos --- */
+/* --- Página de préstamos --- */
 .filter-card {
   margin-bottom: 2rem;
 }
 
+/* --- 🔹 BARRA DE BÚSQUEDA (CORREGIDA) --- */
 #filtro-form {
   display: flex;
-  align-items: flex-end;
-  gap: 1.5rem;
+  align-items: center; /* centrado vertical */
+  justify-content: center; /* centrado horizontal */
+  gap: 1rem;
+  flex-wrap: wrap; /* adaptable a pantallas pequeñas */
 }
 
-#filtro-form .form-group {
-  margin-bottom: 0;
+#filtro-form label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-right: 0.5rem;
 }
 
-#filtro-form select {
-  width: 100%;
-  padding: 0.8rem;
+#filtro-form input[type="text"] {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.8rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 1rem;
-  background-color: white;
+  background-color: #fff;
+  color: var(--text-color);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#filtro-form input[type="text"]:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.25);
+  outline: none;
 }
 
 #filtro-form button {
-  height: 45px; /* Misma altura que inputs */
+  height: 45px;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 /* --- Grilla de Resultados --- */
@@ -416,4 +449,24 @@ tbody tr:hover {
 
 .cronograma-card {
   grid-column: 1 / -1; /* Ocupa todo el ancho */
+}
+
+/* --- Estado de API --- */
+.api-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #ddd;
+  color: #222;
+  margin-left: 0.5rem;
+}
+.status-ok {
+  background: #c8f7c5;
+  color: #0b6121;
+}
+.status-bad {
+  background: #ffd6d6;
+  color: #8a1f11;
 }
