@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Registro de Préstamo - SisPresta</title>
+    <title>Registro de Préstamo - PrestaPe</title>
     <link rel="stylesheet" href="../css/styles.css" />
     <link
       rel="stylesheet"
@@ -14,26 +14,34 @@
     <header class="navbar">
       <div class="navbar-brand">
         <i class="fa-solid fa-landmark"></i>
-        <h1>SisPresta</h1>
+        <h1>PrestaPe</h1>
       </div>
       <nav class="navbar-nav">
-        <a href="../index.html" class="nav-link"
+        <a href="principal.html" class="nav-link"
           ><i class="fa-solid fa-house"></i> Inicio</a
         >
-        <a href="#" class="nav-link"
+        <a href="prestamos.html" class="nav-link"
           ><i class="fa-solid fa-table-list"></i> Préstamos</a
         >
         <a href="nuevo-prestamo.html" class="nav-link active"
           ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
         >
+        <a href="#" id="logout-btn" class="nav-link">
+          <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </a>
       </nav>
     </header>
 
     <main class="container">
       <section id="registro-prestamo-container">
-        <div class="main-title">
-          <h2>Registro de Nuevo Préstamo</h2>
-          <p id="cliente-info-header"></p>
+        <div class="header-row">
+          <div class="main-title">
+            <h2>Registro de Nuevo Préstamo</h2>
+            <p id="cliente-info-header"></p>
+          </div>
+          <button id="btn-generar-dj" class="btn btn-secondary hidden">
+            <i class="fa-solid fa-file-download"></i> Generar DJ
+          </button>
         </div>
         <div class="layout-container">
           <div class="layout-column">
@@ -69,74 +77,85 @@
                     />
                   </div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full-width">
-                  <i class="fa-solid fa-calculator"></i> Generar Cronograma
-                  (Previsualización)
-                </button>
+                <div class="form-group-checkbox">
+                  <input type="checkbox" id="pep" name="pep" />
+                  <label for="pep"
+                    >¿Es una Persona Políticamente Expuesta (PEP)?</label
+                  >
+                </div>
+                <div class="form-buttons-row">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-calculator"></i> Generar
+                    Previsualización
+                  </button>
+                  <button id="btn-confirmar" class="btn btn-confirm" disabled>
+                    Confirmar y Guardar
+                  </button>
+                </div>
               </form>
+              <div id="alerta-uit" class="alert alert-warning hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                  <strong>¡Atención!</strong>
+                  <p>
+                    El monto del préstamo supera las 1 UIT. Se requiere
+                    presentar una Declaración Jurada de Ingresos.
+                  </p>
+                </div>
+              </div>
+              <div id="alerta-pep" class="alert alert-danger hidden">
+                <i class="fa-solid fa-circle-xmark"></i>
+                <div>
+                  <strong>¡Alerta!</strong>
+                  <p>
+                    El cliente ha sido identificado como Persona Expuesta
+                    Políticamente (PEP). Se requiere una debida diligencia
+                    ampliada.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div class="card hidden" id="dj-card">
-              <button
-                id="btn-generar-dj"
-                class="btn btn-secondary btn-full-width"
-              >
-                <i class="fa-solid fa-file-download"></i> Generar DJ (UIT/PEP)
-              </button>
-            </div>
-          </div>
-          <div class="layout-column">
             <div class="card">
-              <h3>Cronograma de Pagos (Previsualización)</h3>
+              <h3>Previsualización del Cronograma</h3>
               <div class="table-container">
                 <table>
                   <thead>
                     <tr>
                       <th>N° Cuota</th>
-                      <th>Fecha Venc.</th>
+                      <th>Fecha Vencimiento</th>
                       <th>Cuota (S/)</th>
+                      <!--
                       <th>Interés (S/)</th>
                       <th>Amortiz. (S/)</th>
                       <th>Saldo (S/)</th>
+                      -->
                     </tr>
                   </thead>
                   <tbody id="cronograma-body"></tbody>
                 </table>
               </div>
             </div>
-            <div id="alerta-uit" class="alert alert-warning hidden">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-              <div>
-                <strong>¡Atención!</strong>
-                <p>
-                  El monto del préstamo supera las 1 UIT. Se requiere presentar
-                  una Declaración Jurada de Ingresos.
-                </p>
-              </div>
-            </div>
-            <div id="alerta-pep" class="alert alert-danger hidden">
-              <i class="fa-solid fa-circle-xmark"></i>
-              <div>
-                <strong>¡Alerta de Riesgo!</strong>
-                <p>
-                  El cliente ha sido identificado como Persona Expuesta
-                  Políticamente (PEP). Se requiere una debida diligencia
-                  ampliada.
-                </p>
-              </div>
-            </div>
-            <button
-              id="btn-confirmar"
-              class="btn btn-confirm btn-full-width"
-              disabled
-            >
-              Confirmar y Guardar
-            </button>
           </div>
         </div>
       </section>
     </main>
+    <!-- Cargar dependencias primero (UMD builds) -->
+    <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.6.0/decimal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/dist/date-fns.min.js"></script>
+
+    <!-- Luego tus scripts -->
     <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
+    <script src="../utils/calculadora.js"></script>
     <script src="../js/registro.js"></script>
+    <script>
+      if (
+        window.SisPrestaAuth &&
+        typeof window.SisPrestaAuth.checkAuthAndRedirect === "function"
+      ) {
+        window.SisPrestaAuth.checkAuthAndRedirect();
+      }
+    </script>
   </body>
 </html>

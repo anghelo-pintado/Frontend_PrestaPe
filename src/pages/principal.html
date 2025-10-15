@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PrestaPe - Sistema de Préstamos</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">
+        <i class="fa-solid fa-landmark"></i>
+        <h1>PrestaPe</h1>
+      </div>
+      <nav class="navbar-nav">
+        <a href="principal.html" class="nav-link active">
+          <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        <a href="prestamos.html" class="nav-link">
+          <i class="fa-solid fa-table-list"></i> Préstamos
+        </a>
+        <a href="nuevo-prestamo.html" class="nav-link">
+          <i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo
+        </a>
+        <a href="perfil.html" class="nav-link">
+          <i class="fas fa-user"></i> Perfil
+        </a>
+        <a href="#" id="logout-btn" class="nav-link">
+          <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="hero-section">
+        <h2>Sistema de Préstamos</h2>
+        <p>Gestión profesional de préstamos con cronogramas automáticos.</p>
+      </section>
+
+      <section class="actions-card">
+        <h3>Acciones Rápidas</h3>
+        <p>Comience con las operaciones más comunes</p>
+        <div class="actions-buttons">
+          <a href="nuevo-prestamo.html" class="nav-link">
+            <button id="btn-nuevo-prestamo" class="btn btn-primary">
+              <i class="fa-solid fa-file-circle-plus"></i> Nuevo Préstamo
+            </button>
+          </a>
+          <a href="prestamos.html" class="nav-link">
+            <button class="btn btn-secondary">
+              <i class="fa-solid fa-magnifying-glass"></i> Buscar Préstamo
+            </button>
+          </a>
+        </div>
+      </section>
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+      if (
+        window.SisPrestaAuth &&
+        typeof window.SisPrestaAuth.checkAuthAndRedirect === "function"
+      ) {
+        window.SisPrestaAuth.checkAuthAndRedirect();
+      }
+    </script>
+  </body>
+</html>

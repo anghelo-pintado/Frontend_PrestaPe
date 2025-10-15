@@ -6,13 +6,13 @@
   const Api = window.SisPrestaApi;
 
   const LIMITS = {
-    MONTO_MIN: 100,
-    MONTO_MAX: 200000,
-    TEA_MIN_PCT: 1,
-    TEA_MAX_PCT: 200,
+    MONTO_MIN: 0.01,
+    MONTO_MAX: 1000000,
+    TEA_MIN_PCT: 0.01,
+    TEA_MAX_PCT: Infinity,
     PLAZO_MIN: 1,
-    PLAZO_MAX: 120,
-    UIT: 5200,
+    PLAZO_MAX: Infinity,
+    UIT: 5350,
   };
 
   const $ = (id) => document.getElementById(id);
@@ -26,8 +26,35 @@
     const v = Number(n || 0);
     return "S/ " + v.toFixed(2);
   }
+
+  function formatFecha(input) {
+    if (!input) return "-";
+    const s = String(input).trim();
+    // Si ya está en dd/mm/yyyy, dejarlo
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+    // Manejar ISO yyyy-mm-dd o datetime
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    let d;
+    if (iso) {
+      d = new Date(`${iso[1]}-${iso[2]}-${iso[3]}T00:00:00`);
+    } else {
+      d = new Date(s);
+    }
+    if (!(d instanceof Date) || isNaN(d)) return s;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
   function parsePositiveNumber(val) {
-    const n = Number(val);
+    // const n = Number(val);
+    // return Number.isFinite(n) && n > 0 ? n : NaN;
+    if (val === null || val === undefined) return NaN;
+    // Aceptar coma o punto como separador decimal y eliminar espacios
+    const s = String(val).trim().replace(",", ".");
+    if (s === "") return NaN;
+    const n = Number(s);
     return Number.isFinite(n) && n > 0 ? n : NaN;
   }
 
@@ -38,10 +65,19 @@
   const plazoEl = $("plazo");
   const cronobody = $("cronograma-body");
 
+  // Aceptar decimales en los inputs (UI): paso y valor mínimo
+  if (montoEl) {
+    montoEl.setAttribute("step", "0.01");
+    montoEl.setAttribute("min", String(LIMITS.MONTO_MIN));
+  }
+  if (teaEl) {
+    teaEl.setAttribute("step", "0.01");
+    teaEl.setAttribute("min", String(LIMITS.TEA_MIN_PCT));
+  }
+
   const alertaUIT = $("alerta-uit");
   const alertaPEP = $("alerta-pep");
   const btnGenerarDJ = $("btn-generar-dj");
-  const djCard = $("dj-card");
   const btnConfirmar = $("btn-confirmar");
   const headerCliente = $("cliente-info-header");
 
@@ -81,56 +117,44 @@
       : "(Cliente no reconocido; vuelva a Verificación)";
   }
 
-  if (esPEP) show(alertaPEP);
-  function evaluarUIT() {
-    const m = parsePositiveNumber(montoEl?.value);
-    if (!Number.isFinite(m)) return hide(alertaUIT);
-    if (m > LIMITS.UIT) show(alertaUIT);
-    else hide(alertaUIT);
+  if (esPEP) {
+    show(alertaPEP);
+    // Marcar el checkbox si viene como PEP desde la URL
+    const pepCheckbox = $("pep");
+    if (pepCheckbox) pepCheckbox.checked = true;
   }
 
-  function temFromTEA(teaDecimal) {
-    return Math.pow(1 + teaDecimal, 1 / 12) - 1;
-  }
-  function cuotaFrances(monto, tem, n) {
-    const i = tem;
-    return monto * (i / (1 - Math.pow(1 + i, -n)));
-  }
-  function addMonths(isoDate, months) {
-    const d = new Date(isoDate);
-    const day = d.getDate();
-    d.setMonth(d.getMonth() + months);
-    if (d.getDate() < day) d.setDate(0); // ajuste fin de mes
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${d.getFullYear()}-${mm}-${dd}`;
-  }
-  function generarCronogramaFrances({
-    fechaInicioISO,
-    monto,
-    teaPct,
-    plazoMeses,
-  }) {
-    const teaDec = teaPct / 100;
-    const tem = temFromTEA(teaDec);
-    const cuota = cuotaFrances(monto, tem, plazoMeses);
-    let saldo = monto;
-    const filas = [];
-    for (let k = 1; k <= plazoMeses; k++) {
-      const interes = saldo * tem;
-      const amort = cuota - interes;
-      saldo = Math.max(0, saldo - amort);
-      filas.push({
-        n: k,
-        fecha: addMonths(fechaInicioISO, k),
-        cuota: cuota,
-        interes: interes,
-        amort: amort,
-        saldo: saldo,
-      });
+  function evaluarUIT() {
+    const m = parsePositiveNumber(montoEl?.value);
+    const pepCheckbox = $("pep");
+    const pepChecked = pepCheckbox?.checked || false;
+
+    // Manejo de alerta UIT
+    if (Number.isFinite(m) && m >= LIMITS.UIT) {
+      show(alertaUIT);
+    } else {
+      hide(alertaUIT);
     }
-    return { tem, cuota, filas };
+
+    // Mostrar u ocultar el botón DJ según las condiciones
+    // Se muestra si el monto >= UIT O si está marcado como PEP
+    if ((Number.isFinite(m) && m >= LIMITS.UIT) || pepChecked) {
+      show(btnGenerarDJ);
+    } else {
+      hide(btnGenerarDJ);
+    }
   }
+
+  // Agrega un event listener para el checkbox PEP
+  $("pep")?.addEventListener("change", () => {
+    const pepCheckbox = $("pep");
+    if (pepCheckbox?.checked) {
+      show(alertaPEP);
+    } else {
+      hide(alertaPEP);
+    }
+    evaluarUIT();
+  });
 
   function validarCampos() {
     const fechaISO = fechaEl?.value || "";
@@ -172,9 +196,46 @@
   function pintarCronograma(crono) {
     if (!cronobody) return;
     cronobody.innerHTML = "";
+
+    // Ajustar encabezado según las propiedades presentes en la primera fila
+    const table = cronobody.closest("table");
+    const thead = table ? table.querySelector("thead") : null;
+    const primera = crono.filas && crono.filas.length ? crono.filas[0] : null;
+
+    if (thead) {
+      if (
+        primera &&
+        ("interes" in primera || "amort" in primera || "saldo" in primera)
+      ) {
+        thead.innerHTML = `
+        <tr>
+          <th>N°</th>
+          <th>Fecha</th>
+          <th>Cuota</th>
+          <th>Interés</th>
+          <th>Amortización</th>
+          <th>Saldo</th>
+        </tr>
+      `;
+      } else {
+        thead.innerHTML = `
+        <tr>
+          <th>N° Cuota</th>
+          <th>Fecha Vencimiento</th>
+          <th>Cuota (S/)</th>
+        </tr>
+      `;
+      }
+    }
+
     crono.filas.forEach((f) => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `
+
+      if (
+        primera &&
+        ("interes" in primera || "amort" in primera || "saldo" in primera)
+      ) {
+        tr.innerHTML = `
         <td>${f.n}</td>
         <td>${f.fecha}</td>
         <td>${fmtMoney(f.cuota)}</td>
@@ -182,6 +243,14 @@
         <td>${fmtMoney(f.amort)}</td>
         <td>${fmtMoney(f.saldo)}</td>
       `;
+      } else {
+        tr.innerHTML = `
+        <td>${f.n}</td>
+        <td>${formatFecha(f.fecha)}</td>
+        <td>${fmtMoney(f.cuota)}</td>
+      `;
+      }
+
       cronobody.appendChild(tr);
     });
   }
@@ -203,46 +272,34 @@
       );
       return;
     }
-    const crono = generarCronogramaFrances({
+    const crono = window.PrestaCalculos.generarCronograma({
       fechaInicioISO: v.fechaISO,
       monto: v.monto,
       teaPct: v.teaPct,
       plazoMeses: v.plazo,
     });
+
     pintarCronograma(crono);
-    show(djCard);
     btnConfirmar && (btnConfirmar.disabled = false);
+    evaluarUIT();
   });
 
   btnGenerarDJ?.addEventListener("click", () => {
-    const m = parsePositiveNumber(montoEl?.value);
-    const teaPct = parsePositiveNumber(teaEl?.value);
-    const plazo = parsePositiveNumber(plazoEl?.value);
-    const contenido = [
-      "DECLARACIÓN JURADA - SISPRESTA",
-      "-------------------------------",
-      `Fecha de emisión: ${new Date().toLocaleString()}`,
-      `Cliente: ${nombre || "(sin nombre)"} (DNI ${dni || "-"})`,
-      `Monto solicitado: ${fmtMoney(m)}`,
-      `TEA anual declarada: ${Number(teaPct || 0).toFixed(2)}%`,
-      `Plazo: ${plazo || 0} meses`,
-      esPEP
-        ? "Condición: PEP (Debida diligencia ampliada)"
-        : "Condición: No PEP",
-      m > LIMITS.UIT
-        ? `Alerta UIT: supera 1 UIT (${LIMITS.UIT})`
-        : "Alerta UIT: no supera 1 UIT",
-      "",
-      "Declaro bajo juramento que la información proporcionada es verdadera.",
-      "Firma digital: ____________________",
-    ].join("\n");
-    const blob = new Blob([contenido], { type: "text/plain;charset=utf-8" });
-    const urlBlob = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = urlBlob;
-    a.download = `DJ_${dni || "cliente"}.txt`;
-    a.click();
-    URL.revokeObjectURL(urlBlob);
+    // La ruta a tu archivo
+    const urlPDF =
+      "../docs/DECLARACION JURADA DE CONOCIMIENTO DEL CLIENTE BAJO EL REGIMEN GENERAL  PERSONA NATURAL.pdf";
+
+    // Creamos un enlace temporal en la memoria
+    const link = document.createElement("a");
+    link.href = urlPDF;
+
+    // Le asignamos el atributo download y el nombre del archivo
+    link.setAttribute("download", "Formato_Declaracion_Jurada_PN.pdf");
+
+    // Lo añadimos al documento, hacemos clic y lo removemos
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   });
 
   btnConfirmar?.addEventListener("click", async () => {
@@ -261,12 +318,12 @@
     }
 
     const payload = {
-      clienteDni: dni,
-      fechaInicio: v.fechaISO,
-      monto: v.monto,
-      tea: v.teaPct / 100,
-      plazoMeses: v.plazo,
-      metodo: "FRANCES",
+      dni: dni,
+      startDate: v.fechaISO,
+      principal: v.monto,
+      teaAnnual: v.teaPct / 100,
+      months: v.plazo,
+      pep: $("pep")?.checked || false,
     };
 
     try {

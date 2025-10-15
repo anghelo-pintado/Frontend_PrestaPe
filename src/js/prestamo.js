@@ -8,7 +8,7 @@
   const form = document.getElementById("verificacion-form");
   const dniInput = document.getElementById("dni");
   const nombreInput = document.getElementById("nombre-completo");
-  const pepChk = document.getElementById("pep");
+  const submitBtn = document.getElementById("verificar-button");
 
   const alertaNoEncontrado = document.getElementById(
     "alerta-dni-no-encontrado"
@@ -17,6 +17,9 @@
 
   const onlyDigits = (s) => (s || "").replace(/\D+/g, "");
   const isValidDni = (s) => /^[0-9]{8}$/.test(s || "");
+
+  // Deshabilitar botón y checkbox inicialmente
+  if (submitBtn) submitBtn.disabled = true;
 
   function show(el) {
     el && el.classList.remove("hidden");
@@ -35,11 +38,17 @@
     nombreInput.value = nombre || "";
   }
 
+  function updateButtonsState(value) {
+    const isValid = isValidDni(value);
+    if (submitBtn) submitBtn.disabled = !isValid;
+  }
+
   dniInput?.addEventListener("input", () => {
     const clean = onlyDigits(dniInput.value).slice(0, 8);
     if (dniInput.value !== clean) dniInput.value = clean;
     resetAlerts();
     setNombre("");
+    updateButtonsState(clean);
   });
 
   async function consultarBackend(dni) {
@@ -54,7 +63,7 @@
 
     try {
       const cliente = await Api.getClienteByDni(dni);
-      const nombre = cliente?.nombreCompleto || cliente?.nombre || "";
+      const nombre = cliente?.nombreCompleto || cliente?.fullName || "";
       if (!nombre) {
         show(alertaNoEncontrado);
         return { ok: false };
@@ -89,7 +98,6 @@
   form?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const dni = onlyDigits(dniInput?.value || "");
-    const pep = !!pepChk?.checked;
 
     const r = await consultarBackend(dni);
     if (!r.ok) return;
@@ -97,7 +105,7 @@
     const params = new URLSearchParams({
       dni: dni,
       nombre: r.nombre,
-      pep: pep ? "1" : "0",
+      //pep: r.pep ? "1" : "0",
     });
     window.location.href = `./registro-prestamo.html?${params.toString()}`;
   });

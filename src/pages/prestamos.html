@@ -3,21 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Consultar Préstamos - SisPresta</title>
+    <title>Consultar Préstamos - PrestaPe</title>
     <link rel="stylesheet" href="../css/styles.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
   </head>
   <body>
     <header class="navbar">
       <div class="navbar-brand">
         <i class="fa-solid fa-landmark"></i>
-        <h1>SisPresta</h1>
+        <h1>PrestaPe</h1>
       </div>
       <nav class="navbar-nav">
-        <a href="../index.html" class="nav-link">
+        <a href="principal.html" class="nav-link">
           <i class="fa-solid fa-house"></i> Inicio
         </a>
         <a href="prestamos.html" class="nav-link active">
@@ -25,6 +27,12 @@
         </a>
         <a href="nuevo-prestamo.html" class="nav-link">
           <i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo
+        </a>
+        <a href="perfil.html" class="nav-link">
+          <i class="fas fa-user"></i> Perfil
+        </a>
+        <a href="#" id="logout-btn" class="nav-link">
+          <i class="fa-solid fa-right-from-bracket"></i> Salir
         </a>
       </nav>
     </header>
@@ -37,11 +45,10 @@
       <section class="card filter-card">
         <form id="filtro-form">
           <div class="form-group-inline">
-            <label for="filtro-dni">Buscar por DNI del cliente:</label>
             <input
               type="text"
               id="filtro-dni"
-              placeholder="Ingrese DNI"
+              placeholder="Buscar por DNI del cliente..."
               maxlength="8"
               required
             />
@@ -50,9 +57,6 @@
             </button>
           </div>
         </form>
-      </section>
-
-      <section id="resultado-busqueda" class="hidden">
         <div id="mensaje-no-encontrado" class="alert alert-danger hidden">
           <i class="fa-solid fa-circle-xmark"></i>
           <div>
@@ -60,7 +64,9 @@
             de nuevo.
           </div>
         </div>
+      </section>
 
+      <section id="resultado-busqueda" class="hidden">
         <div class="results-grid">
           <div class="card info-card">
             <div class="info-item">
@@ -76,10 +82,17 @@
               <span>TEA:</span> <strong id="res-tea"></strong>
             </div>
             <div class="info-item">
+              <span>Fecha de Inicio:</span>
+              <strong id="res-fecha-inicio"></strong>
+            </div>
+            <div class="info-item">
               <span>Plazo:</span> <strong id="res-plazo"></strong>
             </div>
             <div class="info-item">
               <span>Cuota Fija Mensual:</span> <strong id="res-cuota"></strong>
+            </div>
+            <div class="info-item">
+              <span>Es PEP:</span> <strong id="res-pep"></strong>
             </div>
           </div>
 
@@ -87,11 +100,13 @@
             <h4>Acciones</h4>
             <button
               id="btn-exportar-pdf"
-              class="btn btn-secondary btn-full-width"
+              class="btn btn-secondary btn-full-width btn-full-height"
             >
               <i class="fa-solid fa-file-pdf"></i> Exportar PDF cronograma
             </button>
+            <!--
             <hr />
+            
             <div class="form-group">
               <label for="email-input">Enviar cronograma por email</label>
               <div class="input-group">
@@ -105,6 +120,7 @@
                 </button>
               </div>
             </div>
+            -->
           </div>
 
           <div class="card cronograma-card">
@@ -125,9 +141,18 @@
         </div>
       </section>
     </main>
-
     <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
+    <script src="../utils/generar-pdf.js"></script>
     <script src="../js/prestamos-logic.js"></script>
+    <script>
+      if (
+        window.SisPrestaAuth &&
+        typeof window.SisPrestaAuth.checkAuthAndRedirect === "function"
+      ) {
+        window.SisPrestaAuth.checkAuthAndRedirect();
+      }
+    </script>
   </body>
 </html>
