@@ -17,15 +17,18 @@
         <h1>PrestaPe</h1>
       </div>
       <nav class="navbar-nav">
-        <a href="principal.html" class="nav-link"
-          ><i class="fa-solid fa-house"></i> Inicio</a
-        >
-        <a href="prestamos.html" class="nav-link"
-          ><i class="fa-solid fa-table-list"></i> Préstamos</a
-        >
-        <a href="nuevo-prestamo.html" class="nav-link active"
-          ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
-        >
+        <a href="principal.html" class="nav-link">
+          <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        <a href="prestamos.html" class="nav-link">
+          <i class="fa-solid fa-table-list"></i> Préstamos
+        </a>
+        <a href="nuevo-prestamo.html" class="nav-link active">
+          <i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo
+        </a>
+        <a href="caja.html" class="nav-link">
+          <i class="fa-solid fa-cash-register"></i> Caja
+        </a>
         <a href="perfil.html" class="nav-link">
           <i class="fas fa-user"></i> Perfil
         </a>
@@ -38,18 +41,18 @@
     <main class="container">
       <section class="form-container">
         <h2>Verificación de Cliente para Nuevo Préstamo</h2>
-        <p>Ingrese el número de DNI del solicitante para iniciar.</p>
+        <p>Ingrese el número de DNI/RUC del solicitante para iniciar.</p>
 
         <form id="verificacion-form" class="verification-form">
           <div class="form-group-inline">
             <div class="form-group">
-              <label for="dni">DNI</label>
+              <label for="documentId">DNI/RUC</label>
               <input
                 type="text"
-                id="dni"
-                name="dni"
-                placeholder="Ingrese los 8 dígitos"
-                maxlength="8"
+                id="documentId"
+                name="documentId"
+                placeholder="Ingrese de 8 a 11 dígitos"
+                maxlength="11"
                 required
               />
             </div>
@@ -83,11 +86,14 @@
             </p>
           </div>
         </div>
-        <div id="alerta-dni-no-encontrado" class="alert alert-danger hidden">
+        <div
+          id="alerta-documentId-no-encontrado"
+          class="alert alert-danger hidden"
+        >
           <i class="fa-solid fa-circle-xmark"></i>
           <div>
-            <strong>DNI no encontrado</strong>
-            <p>DNI no encontrado. Por favor, verifique el número.</p>
+            <strong>DNI/RUC no encontrado</strong>
+            <p>DNI/RUC no encontrado. Por favor, verifique el número.</p>
           </div>
         </div>
       </section>

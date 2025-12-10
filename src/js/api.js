@@ -95,11 +95,11 @@
       }
     },
 
-    getClienteByDni: async function (dni) {
+    getClienteByDocumentId: async function (documentId) {
       return request("/cliente/verificar", {
         method: "POST",
         body: {
-          dni: dni,
+          documentId: documentId,
           pep: false, // Valor por defecto, se actualizará más tarde
         },
       });
@@ -107,9 +107,9 @@
     crearPrestamo: (payload) =>
       request(`/prestamo`, { method: "POST", body: payload }),
     getPrestamoById: (id) => {
-      const key = id && typeof id === "object" ? id.dni || id.id : id;
-      if (!key) return Promise.reject(new Error("dni/id requerido"));
-      return request(`/prestamo?dni=${encodeURIComponent(key)}`);
+      const key = id && typeof id === "object" ? id.documentId || id.id : id;
+      if (!key) return Promise.reject(new Error("documentId/id requerido"));
+      return request(`/prestamo?documentId=${encodeURIComponent(key)}`);
     },
     listarPrestamos: (params = {}) => {
       const q = new URLSearchParams();
@@ -119,6 +119,31 @@
       const qs = q.toString() ? `?${q.toString()}` : "";
       return request(`/prestamo${qs}`);
     },
+    registrarPago: (payload) => {
+      return request("/pagos", { method: "POST", body: payload });
+    },
+    crearPreferenciaMP: (cuotaId, monto) => {
+      // Nota: El backend espera @RequestParam, por eso usamos query params en la URL
+      return request(
+        `/pagos/mercadopago/preferencia?cuotaId=${cuotaId}&monto=${monto}`,
+        {
+          method: "POST",
+        }
+      );
+    },
+    getComprobantesPorCuota: (cuotaId) => {
+      if (!cuotaId) {
+        return Promise.reject(new Error("cuotaId requerido"));
+      }
+      return request(`/comprobantes/cuota/${cuotaId}`);
+    },
+    abrirCaja: (payload) =>
+      request("/caja/abrir", { method: "POST", body: payload }),
+
+    getCajaResumen: () => request("/caja/resumen"), // GET por defecto
+
+    cerrarCaja: (payload) =>
+      request("/caja/cerrar", { method: "POST", body: payload }),
   };
 
   global.SisPrestaApi = Api;

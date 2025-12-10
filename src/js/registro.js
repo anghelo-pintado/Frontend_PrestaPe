@@ -77,17 +77,19 @@
 
   const alertaUIT = $("alerta-uit");
   const alertaPEP = $("alerta-pep");
+  const alertaDuplicado = $("alerta-duplicado");
+
   const btnGenerarDJ = $("btn-generar-dj");
   const btnConfirmar = $("btn-confirmar");
   const headerCliente = $("cliente-info-header");
 
   const url = new URL(window.location.href);
-  const dni = url.searchParams.get("dni") || "";
+  const documentId = url.searchParams.get("documentId") || "";
   const nombre = url.searchParams.get("nombre") || "";
   const esPEP = url.searchParams.get("pep") === "1";
 
   // ===== Setear fecha actual y BLOQUEAR edición =====
-  if (fechaEl) {
+  /*   if (fechaEl) {
     const hoy = new Date();
     const yyyy = hoy.getFullYear();
     const mm = String(hoy.getMonth() + 1).padStart(2, "0");
@@ -109,11 +111,11 @@
     // Señal visual opcional
     fechaEl.style.backgroundColor = "#f0f2f5";
     fechaEl.style.cursor = "not-allowed";
-  }
+  } */
 
   if (headerCliente) {
-    headerCliente.textContent = dni
-      ? `Cliente: ${nombre || "(sin nombre)"} — DNI ${dni}`
+    headerCliente.textContent = documentId
+      ? `Cliente: ${nombre || "(sin nombre)"} — DNI/RUC ${documentId}`
       : "(Cliente no reconocido; vuelva a Verificación)";
   }
 
@@ -197,58 +199,61 @@
     if (!cronobody) return;
     cronobody.innerHTML = "";
 
-    // Ajustar encabezado según las propiedades presentes en la primera fila
     const table = cronobody.closest("table");
     const thead = table ? table.querySelector("thead") : null;
+    const tfoot = table ? table.querySelector("tfoot") : null;
     const primera = crono.filas && crono.filas.length ? crono.filas[0] : null;
 
+    // Verificar si tenemos los campos detallados del nuevo calculadora.js
+    const tieneDetalle =
+      primera &&
+      ("capital" in primera || "interesBase" in primera || "saldo" in primera);
+
+    // Actualizar encabezado de la tabla
     if (thead) {
-      if (
-        primera &&
-        ("interes" in primera || "amort" in primera || "saldo" in primera)
-      ) {
+      if (tieneDetalle) {
         thead.innerHTML = `
-        <tr>
-          <th>N°</th>
-          <th>Fecha</th>
-          <th>Cuota</th>
-          <th>Interés</th>
-          <th>Amortización</th>
-          <th>Saldo</th>
-        </tr>
-      `;
+          <tr>
+            <th>N°</th>
+            <th>Fecha</th>
+            <th>Amortización</th>
+            <th>Interés</th>
+            <th>IGV</th>
+            <th>Cuota</th>
+            <th>Saldo</th>
+          </tr>
+        `;
       } else {
         thead.innerHTML = `
-        <tr>
-          <th>N° Cuota</th>
-          <th>Fecha Vencimiento</th>
-          <th>Cuota (S/)</th>
-        </tr>
-      `;
+          <tr>
+            <th>N° Cuota</th>
+            <th>Fecha Vencimiento</th>
+            <th>Cuota (S/)</th>
+          </tr>
+        `;
       }
     }
 
+    // Pintar filas
     crono.filas.forEach((f) => {
       const tr = document.createElement("tr");
 
-      if (
-        primera &&
-        ("interes" in primera || "amort" in primera || "saldo" in primera)
-      ) {
+      if (tieneDetalle) {
         tr.innerHTML = `
-        <td>${f.n}</td>
-        <td>${f.fecha}</td>
-        <td>${fmtMoney(f.cuota)}</td>
-        <td>${fmtMoney(f.interes)}</td>
-        <td>${fmtMoney(f.amort)}</td>
-        <td>${fmtMoney(f.saldo)}</td>
-      `;
+          <td>${f.n}</td>
+          <td>${formatFecha(f.fecha)}</td>
+          <td>${fmtMoney(f.capital)}</td>
+          <td>${fmtMoney(f.interesBase)}</td>
+          <td>${fmtMoney(f.igv)}</td>
+          <td>${fmtMoney(f.cuota)}</td>
+          <td>${fmtMoney(f.saldo)}</td>
+        `;
       } else {
         tr.innerHTML = `
-        <td>${f.n}</td>
-        <td>${formatFecha(f.fecha)}</td>
-        <td>${fmtMoney(f.cuota)}</td>
-      `;
+          <td>${f.n}</td>
+          <td>${formatFecha(f.fecha)}</td>
+          <td>${fmtMoney(f.cuota)}</td>
+        `;
       }
 
       cronobody.appendChild(tr);
@@ -310,15 +315,15 @@
       );
       return;
     }
-    if (!dni) {
+    if (!documentId) {
       alert(
-        "No se recibió DNI en la URL. Regresa a la Verificación de Cliente."
+        "No se recibió DNI/RUC en la URL. Regresa a la Verificación de Cliente."
       );
       return;
     }
 
     const payload = {
-      dni: dni,
+      documentId: documentId,
       startDate: v.fechaISO,
       principal: v.monto,
       teaAnnual: v.teaPct / 100,
@@ -329,9 +334,35 @@
     try {
       const creado = await Api.crearPrestamo(payload);
       alert("Préstamo guardado correctamente.");
-      window.location.href = `./prestamos.html?dni=${encodeURIComponent(dni)}`;
+      window.location.href = `./prestamos.html?documentId=${encodeURIComponent(
+        documentId
+      )}`;
     } catch (e) {
       console.error(e);
+
+      // Intentar obtener el status desde distintos tipos de error
+      const status =
+        e?.status ||
+        e?.response?.status ||
+        (e?.response && e.response.status) ||
+        null;
+
+      // Manejo específico para 403: ya existe préstamo para el cliente
+      if (status === 403) {
+        if (alertaDuplicado) {
+          alertaDuplicado.innerHTML = `
+            Ya existe un préstamo activo para este cliente.
+            <a href="./prestamos.html?documentId=${encodeURIComponent(
+              documentId
+            )}">Ver préstamos</a>
+          `;
+          show(alertaDuplicado);
+        } else {
+          alert("Ya existe un préstamo activo para este cliente.");
+        }
+        return;
+      }
+
       alert(e?.message || "No se pudo guardar el préstamo en el backend.");
     }
   });

@@ -28,6 +28,9 @@
         <a href="nuevo-prestamo.html" class="nav-link">
           <i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo
         </a>
+        <a href="caja.html" class="nav-link">
+          <i class="fa-solid fa-cash-register"></i> Caja
+        </a>
         <a href="perfil.html" class="nav-link">
           <i class="fas fa-user"></i> Perfil
         </a>
@@ -47,9 +50,9 @@
           <div class="form-group-inline">
             <input
               type="text"
-              id="filtro-dni"
-              placeholder="Buscar por DNI del cliente..."
-              maxlength="8"
+              id="filtro-documentId"
+              placeholder="Buscar por DNI/RUC del cliente..."
+              maxlength="11"
               required
             />
             <button type="submit" class="btn btn-primary">
@@ -60,8 +63,8 @@
         <div id="mensaje-no-encontrado" class="alert alert-danger hidden">
           <i class="fa-solid fa-circle-xmark"></i>
           <div>
-            <strong>Préstamo no encontrado.</strong> Verifique el DNI e intente
-            de nuevo.
+            <strong>Préstamo no encontrado.</strong> Verifique el DNI/RUC e
+            intente de nuevo.
           </div>
         </div>
       </section>
@@ -73,7 +76,7 @@
               <span>Cliente:</span> <strong id="res-cliente"></strong>
             </div>
             <div class="info-item">
-              <span>DNI:</span> <strong id="res-dni"></strong>
+              <span>DNI/RUC:</span> <strong id="res-dni"></strong>
             </div>
             <div class="info-item">
               <span>Monto del Préstamo:</span> <strong id="res-monto"></strong>
@@ -104,23 +107,6 @@
             >
               <i class="fa-solid fa-file-pdf"></i> Exportar PDF cronograma
             </button>
-            <!--
-            <hr />
-            
-            <div class="form-group">
-              <label for="email-input">Enviar cronograma por email</label>
-              <div class="input-group">
-                <input
-                  type="email"
-                  id="email-input"
-                  placeholder="ana.garcia@example.com"
-                />
-                <button id="btn-enviar-email" class="btn btn-primary">
-                  Enviar
-                </button>
-              </div>
-            </div>
-            -->
           </div>
 
           <div class="card cronograma-card">
@@ -129,9 +115,14 @@
               <table>
                 <thead>
                   <tr>
-                    <th>N° Cuota</th>
-                    <th>Fecha Vencimiento</th>
-                    <th>Monto Cuota</th>
+                    <th>N°</th>
+                    <th>Fecha</th>
+                    <th>Cuota</th>
+                    <th>Pagado</th>
+                    <th>Restante</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                    <th>Comprobante</th>
                   </tr>
                 </thead>
                 <tbody id="res-cronograma-body"></tbody>
@@ -141,10 +132,146 @@
         </div>
       </section>
     </main>
+    <div id="modal-pago" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">Registrar Pago</h3>
+          <button class="close-btn" onclick="cerrarModalPago()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="info-box">
+            <div class="info-row">
+              <span>Vencimiento:</span> <strong id="modal-fecha"></strong>
+            </div>
+            <div class="info-row">
+              <span>Saldo Pendiente:</span>
+              <strong id="modal-saldo" class="text-danger"></strong>
+            </div>
+            <div class="info-row hidden" id="modal-mora-container">
+              <span>Mora:</span>
+              <strong id="modal-mora" class="text-danger"></strong>
+            </div>
+          </div>
+
+          <label class="form-label">Método de Pago:</label>
+          <div class="payment-methods-grid">
+            <div
+              class="method-card selected"
+              onclick="seleccionarMetodo('EFECTIVO')"
+              id="card-efectivo"
+            >
+              <i class="fa-solid fa-money-bill-wave"></i>
+              <span>Efectivo</span>
+            </div>
+            <div
+              class="method-card"
+              onclick="seleccionarMetodo('MERCADO_PAGO')"
+              id="card-mp"
+            >
+              <i class="fa-regular fa-credit-card"></i>
+              <span>Yape / Tarjeta</span>
+            </div>
+          </div>
+
+          <div class="form-group mt-3">
+            <label for="input-monto-pagar">Monto a Pagar (S/)</label>
+            <input
+              type="number"
+              id="input-monto-pagar"
+              class="form-control"
+              step="0.01"
+              min="0.10"
+            />
+
+            <div class="quick-actions mt-2">
+              <button
+                type="button"
+                class="btn-link"
+                onclick="fijarMonto('CUOTA')"
+              >
+                Cuota completa
+              </button>
+            </div>
+          </div>
+
+          <div id="seccion-efectivo" class="mt-3">
+            <div class="form-group">
+              <label for="input-monto-recibido">Dinero Recibido (S/)</label>
+              <input
+                type="number"
+                id="input-monto-recibido"
+                class="form-control"
+                placeholder="Cuánto entrega el cliente"
+              />
+            </div>
+
+            <div class="payment-details mt-2">
+              <p class="text-sm text-muted hidden" id="info-redondeo">
+                Redondeo: <span id="val-redondeo">0.00</span>
+              </p>
+              <p class="vuelto-text">
+                Vuelto: <strong id="texto-vuelto">S/ 0.00</strong>
+              </p>
+            </div>
+          </div>
+
+          <div id="seccion-mp" class="mt-3 hidden text-center">
+            <p class="text-sm text-muted">
+              <i class="fa-solid fa-lock"></i> Se abrirá la pasarela segura de
+              Mercado Pago.
+            </p>
+          </div>
+
+          <div class="form-group mt-3">
+            <label for="input-notas">Notas (opcional)</label>
+            <textarea
+              id="input-notas"
+              class="form-control"
+              rows="2"
+              placeholder="Observaciones..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="cerrarModalPago()">
+            Cancelar
+          </button>
+          <button
+            class="btn btn-primary"
+            id="btn-confirmar-pago"
+            onclick="procesarPago()"
+          >
+            Confirmar Pago
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="modal-comprobantes" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Comprobantes Emitidos</h3>
+          <button class="close-btn" onclick="cerrarModalComprobantes()">
+            &times;
+          </button>
+        </div>
+
+        <div class="modal-body" id="lista-comprobantes"></div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="cerrarModalComprobantes()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
     <script src="../utils/generar-pdf.js"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script src="../js/prestamos-logic.js"></script>
     <script>
       if (

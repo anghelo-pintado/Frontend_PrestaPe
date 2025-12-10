@@ -1,6 +1,6 @@
 (function (global) {
   const SisPrestaConfig = {
-    BASE_URL: "https://prestape-backend-20f65424c7e9.herokuapp.com",
+    BASE_URL: "https://prestape-backend-20f65424c7e9.herokuapp.com", //"http://localhost:8080"
     API_PREFIX: "/api/v1",
 
     TOKEN_KEY: "sispresta:auth",

@@ -6,17 +6,17 @@
   const Api = window.SisPrestaApi;
 
   const form = document.getElementById("verificacion-form");
-  const dniInput = document.getElementById("dni");
+  const documentIdInput = document.getElementById("documentId");
   const nombreInput = document.getElementById("nombre-completo");
   const submitBtn = document.getElementById("verificar-button");
 
   const alertaNoEncontrado = document.getElementById(
-    "alerta-dni-no-encontrado"
+    "alerta-documentId-no-encontrado"
   );
   const alertaActivo = document.getElementById("alerta-prestamo-activo");
 
   const onlyDigits = (s) => (s || "").replace(/\D+/g, "");
-  const isValidDni = (s) => /^[0-9]{8}$/.test(s || "");
+  const isValidDocumentId = (s) => /^[0-9]{8,11}$/.test(s || "");
 
   // Deshabilitar botón y checkbox inicialmente
   if (submitBtn) submitBtn.disabled = true;
@@ -39,30 +39,30 @@
   }
 
   function updateButtonsState(value) {
-    const isValid = isValidDni(value);
+    const isValid = isValidDocumentId(value);
     if (submitBtn) submitBtn.disabled = !isValid;
   }
 
-  dniInput?.addEventListener("input", () => {
-    const clean = onlyDigits(dniInput.value).slice(0, 8);
-    if (dniInput.value !== clean) dniInput.value = clean;
+  documentIdInput?.addEventListener("input", () => {
+    const clean = onlyDigits(documentIdInput.value).slice(0, 11);
+    if (documentIdInput.value !== clean) documentIdInput.value = clean;
     resetAlerts();
     setNombre("");
     updateButtonsState(clean);
   });
 
-  async function consultarBackend(dni) {
+  async function consultarBackend(documentId) {
     resetAlerts();
     setNombre("");
 
-    if (!isValidDni(dni)) {
+    if (!isValidDocumentId(documentId)) {
       hide(alertaActivo);
       show(alertaNoEncontrado);
       return { ok: false };
     }
 
     try {
-      const cliente = await Api.getClienteByDni(dni);
+      const cliente = await Api.getClienteByDocumentId(documentId);
       const nombre = cliente?.nombreCompleto || cliente?.fullName || "";
       if (!nombre) {
         show(alertaNoEncontrado);
@@ -72,7 +72,7 @@
 
       try {
         const vigentes = await Api.listarPrestamos({
-          dni,
+          documentId,
           estado: "VIGENTE",
           page: 0,
           size: 1,
@@ -87,7 +87,7 @@
         console.warn("No se pudo verificar préstamos vigentes:", e2);
       }
 
-      return { ok: true, dni, nombre };
+      return { ok: true, documentId, nombre };
     } catch (e) {
       console.warn("Cliente no encontrado:", e);
       show(alertaNoEncontrado);
@@ -97,13 +97,13 @@
 
   form?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const dni = onlyDigits(dniInput?.value || "");
+    const documentId = onlyDigits(documentIdInput?.value || "");
 
-    const r = await consultarBackend(dni);
+    const r = await consultarBackend(documentId);
     if (!r.ok) return;
 
     const params = new URLSearchParams({
-      dni: dni,
+      documentId: r.documentId,
       nombre: r.nombre,
       //pep: r.pep ? "1" : "0",
     });

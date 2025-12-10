@@ -17,15 +17,21 @@
         <h1>PrestaPe</h1>
       </div>
       <nav class="navbar-nav">
-        <a href="principal.html" class="nav-link"
-          ><i class="fa-solid fa-house"></i> Inicio</a
-        >
-        <a href="prestamos.html" class="nav-link"
-          ><i class="fa-solid fa-table-list"></i> Préstamos</a
-        >
-        <a href="nuevo-prestamo.html" class="nav-link active"
-          ><i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo</a
-        >
+        <a href="principal.html" class="nav-link active">
+          <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        <a href="prestamos.html" class="nav-link">
+          <i class="fa-solid fa-table-list"></i> Préstamos
+        </a>
+        <a href="nuevo-prestamo.html" class="nav-link">
+          <i class="fa-solid fa-circle-plus"></i> Nuevo Préstamo
+        </a>
+        <a href="caja.html" class="nav-link">
+          <i class="fa-solid fa-cash-register"></i> Caja
+        </a>
+        <a href="perfil.html" class="nav-link">
+          <i class="fas fa-user"></i> Perfil
+        </a>
         <a href="#" id="logout-btn" class="nav-link">
           <i class="fa-solid fa-right-from-bracket"></i> Salir
         </a>
@@ -93,6 +99,12 @@
                   </button>
                 </div>
               </form>
+              <div
+                id="alerta-duplicado"
+                class="alert alerta-warning hidden"
+                role="alert"
+                aria-live="polite"
+              ></div>
               <div id="alerta-uit" class="alert alert-warning hidden">
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 <div>
@@ -124,11 +136,9 @@
                       <th>N° Cuota</th>
                       <th>Fecha Vencimiento</th>
                       <th>Cuota (S/)</th>
-                      <!--
                       <th>Interés (S/)</th>
-                      <th>Amortiz. (S/)</th>
+                      <th>Amortización (S/)</th>
                       <th>Saldo (S/)</th>
-                      -->
                     </tr>
                   </thead>
                   <tbody id="cronograma-body"></tbody>
