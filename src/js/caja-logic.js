@@ -46,8 +46,13 @@
     // Llenar datos
     lblFecha.textContent = new Date(data.fechaApertura).toLocaleString();
     lblInicial.textContent = fmtMoney(data.saldoInicial);
-    lblEfectivo.textContent = fmtMoney(data.ingresosEfectivo);
+    lblEfectivo.textContent = data.ingresosEfectivo;
     lblDigital.textContent = fmtMoney(data.ingresosDigital);
+
+    // ✅ NUEVO: Calcular y mostrar total esperado
+    const totalEsperado = data.saldoInicial + data.ingresosEfectivo;
+    document.getElementById("lbl-total-esperado").textContent =
+      fmtMoney(totalEsperado);
 
     // Limpiar input de cierre
     inpMontoFisico.value = "";
@@ -78,6 +83,9 @@
   // --- 3. Cerrar Caja (El Cuadre) ---
   window.procesarCierre = async function () {
     const fisico = parseFloat(inpMontoFisico.value);
+    // Capturamos la observación que agregamos al HTML
+    const obs = document.getElementById("input-observaciones").value.trim();
+
     if (isNaN(fisico) || fisico < 0) {
       alert(
         "Por favor, cuente el dinero e ingrese el monto total en efectivo."
@@ -85,27 +93,66 @@
       return;
     }
 
-    const btn = document.querySelector(".btn-danger"); // Botón cerrar
+    const btn = document.querySelector(".btn-danger");
     const txtOriginal = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML =
-      '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
 
-    try {
-      // Llamamos al backend. Si no cuadra, lanzará excepción.
-      await Api.cerrarCaja({ montoFisico: fisico });
+    // Función auxiliar para llamar a la API
+    const enviarCierre = async (forzar) => {
+      btn.disabled = true;
+      btn.innerHTML =
+        '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
 
-      // Si pasa:
-      alert("✅ ¡Caja cuadrada y cerrada con éxito!");
-      window.location.reload(); // Recargar página para volver al estado cerrado
-    } catch (e) {
-      // AQUÍ CAPTURAMOS EL ERROR DE DESCUADRE
-      // e.message vendrá del GlobalExceptionHandler: "Existe un faltante de..."
-      alert("⛔ NO SE PUEDE CERRAR:\n\n" + e.message);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = txtOriginal;
-    }
+      try {
+        // Enviamos los nuevos parámetros al backend
+        await Api.cerrarCaja({
+          montoFisico: fisico,
+          confirmarDescuadre: forzar, // true o false
+          observaciones: obs,
+        });
+
+        // Si pasa:
+        alert("✅ ¡Caja cuadrada y cerrada con éxito!");
+        window.location.reload();
+      } catch (e) {
+        const msj = e.message || "";
+
+        // DETECTAMOS SI ES EL ERROR DE DESCUADRE (Busca palabras clave de tu backend)
+        if (
+          msj.includes("DESCUADRE") ||
+          msj.includes("sobrante") ||
+          msj.includes("faltante")
+        ) {
+          // Le damos la opción al usuario de "salvar" el examen
+          const deseaForzar = confirm(
+            "⛔ REPORTE DE ARQUEO:\n\n" +
+              msj +
+              "\n\n-----------------------------------\n" +
+              "¿Desea registrar esta diferencia como INCIDENCIA y cerrar de todas formas?"
+          );
+
+          if (deseaForzar) {
+            // REINTENTO AUTOMÁTICO con el flag activado
+            if (!obs) {
+              alert(
+                "⚠️ Debe ingresar una justificación en el campo 'Observaciones' para aprobar el descuadre."
+              );
+            } else {
+              await enviarCierre(true); // Llamada recursiva con true
+              return; // Salimos para no reactivar botón doble vez
+            }
+          }
+        } else {
+          // Otro error (ej. servidor caído)
+          alert("Error: " + msj);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = txtOriginal;
+      }
+    };
+
+    // Primera llamada: Intentar cerrar sin forzar (false)
+    await enviarCierre(false);
   };
 
   function fmtMoney(n) {

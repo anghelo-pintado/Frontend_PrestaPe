@@ -73,32 +73,59 @@
       <section id="panel-caja-abierta" class="hidden">
         <div class="dashboard-grid">
           <div class="card info-card">
+            <!-- Header -->
             <div class="card-header-row">
               <h4><i class="fa-solid fa-shop"></i> Turno Activo</h4>
               <span class="badge badge-success">ABIERTA</span>
             </div>
+
+            <!-- Datos iniciales -->
             <div class="info-item mt-3">
               <span>Apertura:</span>
               <strong id="lbl-fecha-apertura">--:--</strong>
             </div>
+
             <div class="info-item">
               <span>Saldo Inicial:</span>
               <strong id="lbl-saldo-inicial">S/ 0.00</strong>
             </div>
+
             <hr />
+
+            <!-- Ingresos -->
             <h5 class="text-muted">Ingresos Registrados (Sistema)</h5>
+
             <div class="info-item">
               <span>Efectivo (+ Redondeo):</span>
               <strong id="lbl-ingreso-efectivo" class="text-success"
                 >S/ 0.00</strong
               >
             </div>
+
             <div class="info-item">
               <span>Digital (Yape/Tarjeta):</span>
               <strong id="lbl-ingreso-digital" class="text-info"
                 >S/ 0.00</strong
               >
             </div>
+
+            <hr />
+
+            <!-- Total esperado -->
+            <div class="info-item total-esperado-box">
+              <span><strong>💰 TOTAL ESPERADO EN CAJA:</strong></span>
+              <strong
+                id="lbl-total-esperado"
+                class="text-success total-esperado-text"
+              >
+                S/ 0.00
+              </strong>
+            </div>
+
+            <small class="text-muted">
+              Este es el monto que debe coincidir con su conteo físico de
+              efectivo.
+            </small>
           </div>
 
           <div class="card action-card">
@@ -131,6 +158,18 @@
               <small class="text-muted"
                 >Debe coincidir con: Saldo Inicial + Ventas Efectivo</small
               >
+            </div>
+
+            <div class="form-group mt-3">
+              <label for="input-observaciones"
+                >Observaciones / Justificación</label
+              >
+              <textarea
+                id="input-observaciones"
+                class="form-control"
+                rows="2"
+                placeholder="Ej: Faltan 0.10 céntimos por redondeo..."
+              ></textarea>
             </div>
 
             <button

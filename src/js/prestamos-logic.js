@@ -7,7 +7,7 @@
   }
   const Api = window.SisPrestaApi;
 
-  // Inicializa Mercado Pago (Asegúrate de poner tu Public Key real)
+  // Inicializa Mercado Pago
   const mp = new MercadoPago("APP_USR-1b053ced-9c7e-4bf7-ba7f-aafcbf20aa24", {
     locale: "es-PE",
   });
@@ -84,7 +84,7 @@
   // --- 2. LÓGICA DEL MODAL DE PAGO ---
 
   window.abrirModalPago = function (fila) {
-    cuotaActual = fila; // 'fila' ya viene con moraEstimada y totalConMora desde el mapping
+    cuotaActual = fila;
 
     // Resetear UI
     seleccionarMetodo("EFECTIVO");
@@ -124,7 +124,6 @@
     inputPagar.value = montoSugerido.toFixed(2);
 
     // Permitir pagar más (adelanto) limitándolo a la deuda total del préstamo
-    // Nota: deudaTotalPrestamo es un aproximado calculado en render
     inputPagar.max = (deudaTotalPrestamo + (fila.moraEstimada || 0)).toFixed(2);
 
     // Ejecutar cálculo inicial para mostrar mensajes
@@ -158,7 +157,6 @@
       secMp.classList.add("hidden");
       btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Pago';
       btn.className = "btn btn-primary";
-      // Actualizar cálculos de vuelto
       actualizarCalculosUI();
     } else {
       secEfectivo.classList.add("hidden");
@@ -174,7 +172,6 @@
     const input = document.getElementById("input-monto-pagar");
 
     if (tipo === "CUOTA") {
-      // Fijar el TOTAL EXIGIBLE (Capital + Mora)
       const total = cuotaActual.totalConMora || cuotaActual.montoRestante;
       input.value = total.toFixed(2);
     } else if (tipo === "TOTAL") {
@@ -183,34 +180,34 @@
     input.dispatchEvent(new Event("input"));
   };
 
-  // --- 3. CALCULADORA UI (Vuelto + Aviso Mora) ---
+  // --- 3. CALCULADORA UI (Vuelto + Aviso Mora Corregido) ---
   function actualizarCalculosUI() {
     const inputPagar = document.getElementById("input-monto-pagar");
     const inputRecibido = document.getElementById("input-monto-recibido");
 
     const montoPagar = parseFloat(inputPagar.value) || 0;
 
-    // A. LÓGICA DE AVISO DE MORA (El "Truco")
-    // Buscamos si ya existe el aviso, si no, lo creamos
+    // A. LÓGICA DE AVISO DE MORA (AJUSTADA A REGLA ESTRICTA)
     let avisoMora = document.getElementById("aviso-mora-dinamico");
     if (!avisoMora) {
       avisoMora = document.createElement("div");
       avisoMora.id = "aviso-mora-dinamico";
       avisoMora.className = "mt-2 text-sm text-center font-weight-bold";
-      inputPagar.parentNode.appendChild(avisoMora); // Insertar debajo del input
+      inputPagar.parentNode.appendChild(avisoMora);
     }
 
     if (cuotaActual && cuotaActual.tieneMora) {
-      // Tolerancia pequeña para decimales
       const deudaTotal = cuotaActual.totalConMora;
 
+      // MODIFICACIÓN: Ya no decimos "Mora Perdonada" en pago parcial.
+      // Advertimos que la mora se cobra prioritariamente.
       if (montoPagar < deudaTotal - 0.02) {
-        // Pago Parcial -> Mora Perdonada
-        avisoMora.innerHTML =
-          '<i class="fa-solid fa-gift text-success"></i> Pago Parcial: <strong>¡Mora Perdonada!</strong>';
-        avisoMora.className = "mt-2 text-sm text-center text-success";
+        avisoMora.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> Pago Parcial: <strong>Se cobrará Mora (${fmtMoney(
+          cuotaActual.moraEstimada
+        )}) primero.</strong>`;
+        avisoMora.className = "mt-2 text-sm text-center text-danger";
       } else {
-        // Pago Total -> Cobra Mora
+        // Pago Total
         avisoMora.innerHTML = `<i class="fa-solid fa-circle-exclamation text-warning"></i> Incluye Mora de ${fmtMoney(
           cuotaActual.moraEstimada
         )}`;
@@ -224,7 +221,7 @@
     if (metodoSeleccionado !== "EFECTIVO") return;
 
     const montoRecibido = parseFloat(inputRecibido.value) || 0;
-    const montoRedondeado = Math.round(montoPagar * 10) / 10; // Redondeo 0.10
+    const montoRedondeado = Math.round(montoPagar * 10) / 10;
     const diferenciaRedondeo = montoRedondeado - montoPagar;
 
     const infoRedondeo = document.getElementById("info-redondeo");
@@ -304,7 +301,6 @@
         if (docId) document.querySelector("#filtro-form button").click();
       } else {
         // MERCADO PAGO
-        // Usamos el montoPagar tal cual. El backend decide si divide en items (capital+mora)
         const data = await Api.crearPreferenciaMP(cuotaActual.id, montoPagar);
 
         if (data && data.preferenceId) {
@@ -319,6 +315,7 @@
       }
     } catch (e) {
       console.error(e);
+      // Aquí se mostrarán los errores de Caja Cerrada (409) o Secuencialidad
       alert(e.message || "Error al procesar el pago.");
     } finally {
       btn.disabled = false;
@@ -327,8 +324,6 @@
   };
 
   // --- 5. LOGICA DE RENDERIZADO Y MAPEO ---
-
-  // Aquí mapeamos los NUEVOS campos que vienen del Backend (DTO actualizado)
   function mapBackendToUi(b) {
     if (!b) return null;
     const c = b.customer || {};
@@ -357,8 +352,6 @@
         montoPagado: s.amountPaid ?? s.montoPagado ?? 0,
         montoRestante: s.balance ?? s.montoRestante ?? 0,
         estado: s.state || s.estado,
-
-        // --- NUEVOS CAMPOS MORA ---
         moraEstimada: s.moraEstimada || 0,
         totalConMora: s.totalConMora || (s.balance ?? 0),
         tieneMora: s.tieneMora || false,
@@ -395,7 +388,6 @@
       let comprobanteHtml = "-";
 
       if (fila.estado !== "PAGADO") {
-        // Pasamos todo el objeto 'fila' (con los datos de mora) al botón
         accionHtml = `
             <button class="btn btn-sm btn-primary btn-pagar-row" 
                     data-cuota='${JSON.stringify(fila)}'>
@@ -415,7 +407,6 @@
         `;
       }
 
-      // Si tiene mora, mostramos el estado en rojo o con alerta
       let estadoStr = fila.estado || "-";
       if (fila.tieneMora) {
         estadoStr += ` <span style="color:red; font-size: 0.8em;">(Mora)</span>`;
@@ -442,9 +433,6 @@
     });
   };
 
-  // --- 6. FUNCIONES DE BÚSQUEDA Y AUXILIARES ---
-
-  // (Sin cambios mayores respecto a tu código, solo reordenamiento)
   async function buscarPrestamoPorDocumentId(documentId) {
     hide(alertaNo);
     hide(resultado);
@@ -484,8 +472,6 @@
   const alertaNo = $("mensaje-no-encontrado");
   const cronobody = $("res-cronograma-body");
   const btnExportar = $("btn-exportar-pdf");
-  const btnEmail = $("btn-enviar-email");
-  const emailInput = $("email-input");
 
   const resCliente = $("res-cliente");
   const resDni = $("res-dni");
@@ -533,7 +519,6 @@
     document.getElementById("modal-comprobantes").classList.add("hidden");
   };
 
-  // Delegación de eventos Comprobantes
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".btn-comprobantes");
     if (!btn) return;
@@ -556,7 +541,6 @@
     }
   });
 
-  // Auto-run si hay params en URL
   const params = new URLSearchParams(window.location.search);
   const documentIdAuto = params.get("documentId") || params.get("dni");
   if (documentIdAuto) {
