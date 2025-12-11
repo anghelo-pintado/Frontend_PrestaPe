@@ -107,12 +107,18 @@
     const spanSaldo = document.getElementById("modal-saldo");
 
     if (fila.tieneMora) {
-      // Caso: Vencido -> Mostramos desglose
       spanSaldo.textContent = fmtMoney(fila.montoRestante) + " (Capital)";
-      spanMora.textContent = "+ " + fmtMoney(fila.moraEstimada);
+      let textoMora = fmtMoney(fila.moraEstimada);
+
+      if (typeof fila.mesesMora === "number" && fila.mesesMora > 0) {
+        textoMora += ` (${fila.mesesMora} mes${
+          fila.mesesMora > 1 ? "es" : ""
+        } de mora)`;
+      }
+
+      spanMora.textContent = "+ " + textoMora;
       divMora.classList.remove("hidden");
     } else {
-      // Caso: Al día -> Solo saldo
       spanSaldo.textContent = fmtMoney(fila.montoRestante);
       divMora.classList.add("hidden");
     }
@@ -199,22 +205,36 @@
     if (cuotaActual && cuotaActual.tieneMora) {
       const deudaTotal = cuotaActual.totalConMora;
 
-      // MODIFICACIÓN: Ya no decimos "Mora Perdonada" en pago parcial.
-      // Advertimos que la mora se cobra prioritariamente.
+      // Mensaje base según si es pago parcial o total
       if (montoPagar < deudaTotal - 0.02) {
-        avisoMora.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> Pago Parcial: <strong>Se cobrará Mora (${fmtMoney(
+        avisoMora.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> Pago parcial: <strong>se cobrará primero la mora (${fmtMoney(
           cuotaActual.moraEstimada
-        )}) primero.</strong>`;
+        )}) y luego capital.</strong>`;
         avisoMora.className = "mt-2 text-sm text-center text-danger";
       } else {
-        // Pago Total
-        avisoMora.innerHTML = `<i class="fa-solid fa-circle-exclamation text-warning"></i> Incluye Mora de ${fmtMoney(
+        avisoMora.innerHTML = `<i class="fa-solid fa-circle-exclamation text-warning"></i> Este pago incluye mora de ${fmtMoney(
           cuotaActual.moraEstimada
-        )}`;
+        )}.`;
         avisoMora.className = "mt-2 text-sm text-center text-warning";
       }
+
+      // 🔥 Mensaje adicional si el back indicó que se perdonó el primer mes de mora
+      if (cuotaActual.primerMesPerdonado) {
+        avisoMora.innerHTML += `<br>
+      <i class="fa-solid fa-circle-info"></i>
+      Se perdonó la mora del primer mes por pago anticipado.`;
+      }
     } else {
-      avisoMora.textContent = "";
+      // No tiene mora actual
+      avisoMora.innerHTML = "";
+      avisoMora.className = "mt-2 text-sm text-center text-muted";
+
+      // 👇 Si no hay mora, pero el back indica que hubo perdón, igual lo contamos
+      if (cuotaActual && cuotaActual.primerMesPerdonado) {
+        avisoMora.innerHTML = `
+      <i class="fa-solid fa-circle-info"></i>
+      Se perdonó la mora del primer mes por pago anticipado.`;
+      }
     }
 
     // B. LÓGICA DE VUELTO (Solo Efectivo)
@@ -352,9 +372,14 @@
         montoPagado: s.amountPaid ?? s.montoPagado ?? 0,
         montoRestante: s.balance ?? s.montoRestante ?? 0,
         estado: s.state || s.estado,
-        moraEstimada: s.moraEstimada || 0,
-        totalConMora: s.totalConMora || (s.balance ?? 0),
-        tieneMora: s.tieneMora || false,
+
+        moraEstimada: s.moraEstimada ?? 0,
+        totalConMora: s.totalConMora ?? s.balance ?? 0,
+        tieneMora: !!s.tieneMora,
+
+        // 🔥 NUEVOS CAMPOS QUE VIENEN DEL BACK
+        mesesMora: s.mesesMora ?? 0,
+        primerMesPerdonado: !!s.primerMesPerdonado,
       })),
     };
   }
@@ -410,6 +435,10 @@
       let estadoStr = fila.estado || "-";
       if (fila.tieneMora) {
         estadoStr += ` <span style="color:red; font-size: 0.8em;">(Mora)</span>`;
+      }
+      if (fila.estado === "VENCIDO" && fila.montoPagado > 0) {
+        // Si está vencido pero ya pagó algo, le mostramos visualmente diferente
+        estadoStr = "VENCIDO (Saldo Pendiente)";
       }
 
       tr.innerHTML = `
