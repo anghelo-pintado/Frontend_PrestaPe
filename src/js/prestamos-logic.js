@@ -46,6 +46,69 @@
   let cuotaActual = null;
   let deudaTotalPrestamo = 0;
   let metodoSeleccionado = "EFECTIVO";
+  let pagoEnEspera = null;
+
+  // --- FUNCIONES DE REINGRESO ---
+  window.cerrarModalReingreso = function () {
+    document.getElementById("modal-reingreso").classList.add("hidden");
+    pagoEnEspera = null;
+  };
+
+  window.confirmarReingreso = async function () {
+    const monto = parseFloat(document.getElementById("input-monto-reingreso").value);
+    const obs = document.getElementById("input-observacion-reingreso").value.trim();
+
+    if (!monto || monto <= 0) {
+      alert("Monto de reingreso inválido");
+      return;
+    }
+
+    if (!obs) {
+      alert("Debe ingresar una observación explicando el motivo del reingreso");
+      return;
+    }
+
+    const btn = document.getElementById("btn-confirmar-reingreso");
+    const txtOriginal = btn.innerHTML;
+
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando reingreso...';
+
+      await Api.registrarReingreso({
+        monto: monto,
+        concepto: obs,
+        usuario: "Cajero"
+      });
+
+      cerrarModalReingreso();
+
+      if (pagoEnEspera) {
+        await ejecutarPagoFinal(pagoEnEspera);
+      }
+
+    } catch (e) {
+      console.error(e);
+      alert("Error al registrar reingreso: " + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = txtOriginal;
+    }
+  };
+
+  async function ejecutarPagoFinal(payload) {
+    try {
+      await Api.registrarPago(payload);
+      alert("¡Pago registrado correctamente!");
+      cerrarModalPago();
+
+      const docId = document.getElementById("filtro-documentId").value;
+      if (docId) document.querySelector("#filtro-form button").click();
+    } catch (e) {
+      console.error(e);
+      alert("Error al procesar el pago: " + e.message);
+    }
+  }
 
   // --- 1. CONFIGURACIÓN DE MERCADO PAGO ---
   window.iniciarPagoMP = async function (cuotaId, monto, btnId) {
@@ -86,14 +149,12 @@
   window.abrirModalPago = function (fila) {
     cuotaActual = fila;
 
-    // Resetear UI
     seleccionarMetodo("EFECTIVO");
     document.getElementById("input-notas").value = "";
     document.getElementById("input-monto-recibido").value = "";
     document.getElementById("texto-vuelto").textContent = "S/ 0.00";
     document.getElementById("info-redondeo").classList.add("hidden");
 
-    // Llenar Datos Básicos
     document.getElementById(
       "modal-title"
     ).textContent = `Pagar Cuota #${fila.num}`;
@@ -101,7 +162,6 @@
       fila.fechaVencimiento
     );
 
-    // --- LÓGICA DE VISUALIZACIÓN DE MORA ---
     const divMora = document.getElementById("modal-mora-container");
     const spanMora = document.getElementById("modal-mora");
     const spanSaldo = document.getElementById("modal-saldo");
@@ -123,19 +183,14 @@
       divMora.classList.add("hidden");
     }
 
-    // Configurar input monto
-    // Por defecto sugerimos pagar TODO (Capital + Mora si existe)
     const montoSugerido = fila.totalConMora || fila.montoRestante;
     const inputPagar = document.getElementById("input-monto-pagar");
     inputPagar.value = montoSugerido.toFixed(2);
 
-    // Permitir pagar más (adelanto) limitándolo a la deuda total del préstamo
     inputPagar.max = (deudaTotalPrestamo + (fila.moraEstimada || 0)).toFixed(2);
 
-    // Ejecutar cálculo inicial para mostrar mensajes
     actualizarCalculosUI();
 
-    // Mostrar modal
     document.getElementById("modal-pago").classList.remove("hidden");
   };
 
@@ -193,7 +248,6 @@
 
     const montoPagar = parseFloat(inputPagar.value) || 0;
 
-    // A. LÓGICA DE AVISO DE MORA (AJUSTADA A REGLA ESTRICTA)
     let avisoMora = document.getElementById("aviso-mora-dinamico");
     if (!avisoMora) {
       avisoMora = document.createElement("div");
@@ -205,7 +259,6 @@
     if (cuotaActual && cuotaActual.tieneMora) {
       const deudaTotal = cuotaActual.totalConMora;
 
-      // Mensaje base según si es pago parcial o total
       if (montoPagar < deudaTotal - 0.02) {
         avisoMora.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> Pago parcial: <strong>se cobrará primero la mora (${fmtMoney(
           cuotaActual.moraEstimada
@@ -218,18 +271,15 @@
         avisoMora.className = "mt-2 text-sm text-center text-warning";
       }
 
-      // 🔥 Mensaje adicional si el back indicó que se perdonó el primer mes de mora
       if (cuotaActual.primerMesPerdonado) {
         avisoMora.innerHTML += `<br>
       <i class="fa-solid fa-circle-info"></i>
       Se perdonó la mora del primer mes por pago anticipado.`;
       }
     } else {
-      // No tiene mora actual
       avisoMora.innerHTML = "";
       avisoMora.className = "mt-2 text-sm text-center text-muted";
 
-      // 👇 Si no hay mora, pero el back indica que hubo perdón, igual lo contamos
       if (cuotaActual && cuotaActual.primerMesPerdonado) {
         avisoMora.innerHTML = `
       <i class="fa-solid fa-circle-info"></i>
@@ -237,10 +287,11 @@
       }
     }
 
-    // B. LÓGICA DE VUELTO (Solo Efectivo)
     if (metodoSeleccionado !== "EFECTIVO") return;
 
     const montoRecibido = parseFloat(inputRecibido.value) || 0;
+    
+    // ✅ CORRECCIÓN: Redondear a múltiplo de 0.10
     const montoRedondeado = Math.round(montoPagar * 10) / 10;
     const diferenciaRedondeo = montoRedondeado - montoPagar;
 
@@ -255,6 +306,7 @@
       infoRedondeo.classList.add("hidden");
     }
 
+    // ✅ CORRECCIÓN: El vuelto se calcula sobre el monto REDONDEADO
     const vuelto = montoRecibido - montoRedondeado;
     const elVuelto = document.getElementById("texto-vuelto");
 
@@ -267,7 +319,6 @@
     }
   }
 
-  // Listeners
   document
     .getElementById("input-monto-pagar")
     .addEventListener("input", actualizarCalculosUI);
@@ -275,7 +326,7 @@
     .getElementById("input-monto-recibido")
     .addEventListener("input", actualizarCalculosUI);
 
-  // --- 4. PROCESAR PAGO ---
+  // --- 4. PROCESAR PAGO (ACTUALIZADO CON VALIDACIÓN DE VUELTO Y REINGRESO) ---
   window.procesarPago = async function () {
     const btn = document.getElementById("btn-confirmar-pago");
     const originalText = btn.innerHTML;
@@ -296,12 +347,53 @@
         const montoRecibido = parseFloat(
           document.getElementById("input-monto-recibido").value
         );
+        
+        // ✅ CORRECCIÓN: Calcular sobre el monto redondeado
         const cobroReal = Math.round(montoPagar * 10) / 10;
 
         if (!montoRecibido || montoRecibido < cobroReal) {
           throw new Error(
             `El monto recibido es insuficiente. Mínimo: ${cobroReal.toFixed(2)}`
           );
+        }
+
+        // ✅ CORRECCIÓN: Calcular vuelto sobre el monto REDONDEADO
+        const vueltoCalculado = montoRecibido - cobroReal;
+
+        // ✅ VALIDAR EFECTIVO DISPONIBLE (solo si hay vuelto)
+        if (vueltoCalculado > 0) {
+          try {
+            // ✅ CORRECCIÓN: Validar el vuelto calculado correctamente
+            const validacion = await Api.validarVuelto(montoRecibido, cobroReal);
+
+            if (validacion && !validacion.suficiente) {
+              btn.disabled = false;
+              btn.innerHTML = originalText;
+
+              pagoEnEspera = {
+                cuotaId: cuotaActual.id,
+                montoPagado: montoPagar,
+                montoRecibido: montoRecibido,
+                metodoPago: "EFECTIVO",
+                observaciones: notas,
+              };
+
+              document.getElementById("reingreso-vuelto-necesario").textContent =
+                fmtMoney(validacion.vueltoRequerido || vueltoCalculado);
+              document.getElementById("reingreso-disponible").textContent =
+                fmtMoney(validacion.efectivoDisponible || 0);
+              document.getElementById("reingreso-faltante").textContent =
+                fmtMoney(validacion.faltante || 0);
+              document.getElementById("input-monto-reingreso").value =
+                (validacion.faltante || 0).toFixed(2);
+              document.getElementById("input-observacion-reingreso").value = "";
+
+              document.getElementById("modal-reingreso").classList.remove("hidden");
+              return;
+            }
+          } catch (validacionError) {
+            console.warn("Error en validación de vuelto:", validacionError);
+          }
         }
 
         const payload = {
@@ -316,11 +408,10 @@
         alert("¡Pago registrado correctamente!");
         cerrarModalPago();
 
-        // Recargar tabla
         const docId = document.getElementById("filtro-documentId").value;
         if (docId) document.querySelector("#filtro-form button").click();
+
       } else {
-        // MERCADO PAGO
         const data = await Api.crearPreferenciaMP(cuotaActual.id, montoPagar);
 
         if (data && data.preferenceId) {
@@ -335,7 +426,6 @@
       }
     } catch (e) {
       console.error(e);
-      // Aquí se mostrarán los errores de Caja Cerrada (409) o Secuencialidad
       alert(e.message || "Error al procesar el pago.");
     } finally {
       btn.disabled = false;
@@ -377,7 +467,6 @@
         totalConMora: s.totalConMora ?? s.balance ?? 0,
         tieneMora: !!s.tieneMora,
 
-        // 🔥 NUEVOS CAMPOS QUE VIENEN DEL BACK
         mesesMora: s.mesesMora ?? 0,
         primerMesPerdonado: !!s.primerMesPerdonado,
       })),
@@ -437,7 +526,6 @@
         estadoStr += ` <span style="color:red; font-size: 0.8em;">(Mora)</span>`;
       }
       if (fila.estado === "VENCIDO" && fila.montoPagado > 0) {
-        // Si está vencido pero ya pagó algo, le mostramos visualmente diferente
         estadoStr = "VENCIDO (Saldo Pendiente)";
       }
 

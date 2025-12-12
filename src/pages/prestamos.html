@@ -132,6 +132,8 @@
         </div>
       </section>
     </main>
+
+    <!-- Modal Pago -->
     <div id="modal-pago" class="modal-overlay hidden">
       <div class="modal-content">
         <div class="modal-header">
@@ -248,6 +250,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Comprobantes -->
     <div id="modal-comprobantes" class="modal-overlay hidden">
       <div class="modal-content">
         <div class="modal-header">
@@ -262,6 +266,83 @@
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="cerrarModalComprobantes()">
             Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Modal Reingreso de Dinero -->
+    <div id="modal-reingreso" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-coins"></i> Reingreso de Dinero a Caja
+          </h3>
+          <button class="close-btn" onclick="cerrarModalReingreso()">
+            &times;
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <strong>Falta dinero en caja para dar vuelto</strong>
+          </div>
+
+          <div class="info-box">
+            <div class="info-row">
+              <span>Vuelto a entregar:</span>
+              <strong id="reingreso-vuelto-necesario" class="text-danger">S/ 0.00</strong>
+            </div>
+            <div class="info-row">
+              <span>Efectivo disponible en caja:</span>
+              <strong id="reingreso-disponible">S/ 0.00</strong>
+            </div>
+            <div class="info-row" style="border-top: 2px solid #dc3545; padding-top: 10px; margin-top: 10px;">
+              <span><strong>Dinero faltante:</strong></span>
+              <strong id="reingreso-faltante" class="text-danger" style="font-size: 1.3em;">
+                S/ 0.00
+              </strong>
+            </div>
+          </div>
+
+          <div class="form-group mt-3">
+            <label for="input-monto-reingreso">
+              <i class="fa-solid fa-money-bill"></i> Monto a reingresar
+            </label>
+            <div class="input-group">
+              <span class="input-group-text">S/</span>
+              <input
+                type="number"
+                id="input-monto-reingreso"
+                class="form-control"
+                step="0.10"
+                min="0"
+                style="font-size: 1.2em; font-weight: bold;"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mt-3">
+            <label for="input-observacion-reingreso">
+              Observación / Razón del reingreso
+            </label>
+            <textarea
+              id="input-observacion-reingreso"
+              class="form-control"
+              rows="2"
+              placeholder="Ej: Reingreso por falta de cambio..."
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="cerrarModalReingreso()">
+            <i class="fa-solid fa-times"></i> Cancelar Pago
+          </button>
+          <button id="btn-confirmar-reingreso" class="btn btn-primary" onclick="confirmarReingreso()">
+            <i class="fa-solid fa-check"></i> Confirmar Reingreso
           </button>
         </div>
       </div>

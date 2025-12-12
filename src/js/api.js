@@ -142,6 +142,20 @@
 
     getCajaResumen: () => request("/caja/resumen"), // GET por defecto
 
+     // Validar si hay suficiente efectivo para dar vuelto
+    validarVuelto: (cuotaId, montoPagar, montoRecibido) =>
+      request("/caja/validar-vuelto", {
+        method: "POST",
+        body: { cuotaId, montoPagar, montoRecibido },
+      }),
+
+    // Registrar reingreso de dinero a caja
+    registrarReingreso: (payload) =>
+      request("/caja/reingreso", { method: "POST", body: payload }),
+
+    // Listar movimientos de caja
+    getMovimientosCaja: () => request("/caja/movimientos"),
+
     cerrarCaja: (payload) =>
       request("/caja/cerrar", { method: "POST", body: payload }),
   };
