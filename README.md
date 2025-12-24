@@ -64,7 +64,7 @@ src/
     ```
 
 2.  **Configurar el Backend:**
-    *   La aplicación espera conectarse a una API REST.
+    *   La aplicación espera conectarse a una API REST (repositorio del backend: https://github.com/anghelo-pintado/Backend_Prestamos).
     *   Edita el archivo `src/js/config.js` para apuntar a tu servidor backend:
         ```javascript
         const SisPrestaConfig = {
@@ -89,7 +89,7 @@ src/
 ### Uso
 
 1.  Al abrir la aplicación, serás redirigido a la página de **Login**.
-2.  Ingresa tus credenciales (correo y contraseña).
+2.  Ingresa tus credenciales (correo: admin@gmail.com y contraseña: 12345678).
 3.  Una vez autenticado, accederás al **Panel Principal**.
 4.  Utiliza el menú de navegación para acceder a las diferentes secciones: "Préstamos", "Caja", "Perfil", etc.
 
@@ -99,4 +99,4 @@ Si deseas contribuir al proyecto, por favor crea un *fork* del repositorio, real
 
 ## Licencia
 
-[Incluir aquí la licencia del proyecto, e.g., MIT, Privada, etc.]
+Proyecto académico semestral.
